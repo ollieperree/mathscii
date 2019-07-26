@@ -163,7 +163,6 @@ def matrix(char_arrays:list, horizontal_gap=1, vertical_gap=0):
 
 def diagram(lines, circles, labels, fontsize=12, ttf_font_path="/usr/share/fonts/droid/DroidSansMono.ttf"):
     x_limits, y_limits = diagrams.save_diagram_image(lines, circles, "diagram.jpg")
-    print(x_limits[0])
     string = diagrams.img2text("diagram.jpg", fontsize, ttf_font_path)
     char_array = str_to_char_array(string)
 
