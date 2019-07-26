@@ -18,7 +18,7 @@ def display(arr):
 
 
 def big_sigma(width=9, height=8):
-    # INcludes a blank line at the bottom
+    # Includes a blank line at the bottom
     assert height >= 4
     assert width >= 2
     assert height % 2 == 0
@@ -181,8 +181,9 @@ def diagram(lines, circles, labels, fontsize=12, ttf_font_path="/usr/share/fonts
 
 
 class Diagram:
-    def __init__(self, fontsize=12):
+    def __init__(self, fontsize=12, ttf_font_path="/usr/share/fonts/droid/DroidSansMono.ttf"):
         self.fontsize = fontsize
+        self.ttf_font_path = ttf_font_path
         self.lines = []
         self.circles = []
         self.labels = []
@@ -203,4 +204,4 @@ class Diagram:
         self.labels.append([x, y, text])
 
     def draw(self):
-        return diagram(self.lines, self.circles, self.labels, self.fontsize)
+        return diagram(self.lines, self.circles, self.labels, self.fontsize, self.ttf_font_path)
