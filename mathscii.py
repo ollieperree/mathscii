@@ -1,5 +1,7 @@
+from functools import reduce, partial
 import numpy as np
 import diagrams
+
 
 
 def str_to_char_array(string):
@@ -71,11 +73,15 @@ def integral(width=5, height=8):
 
 
 def neq():
+    """Not equal sign"""
     string = "___/_\n__/__\n /"
     return str_to_char_array(string)
 
 
 def dots(width=5, height=3):
+    assert width >= 3
+    assert height >= 1
+
     string = ""
     for i in range(height):
         if i == height // 2:
@@ -112,8 +118,29 @@ def ddots(width=5, height=3):
     return str_to_char_array(string)
 
 
+def _center(char_array, height=None, width=None):
+    char_array_height, char_array_width = char_array.shape
+
+    if height is None:
+        height = char_array_height
+    else:
+        assert height >= char_array_height
+    if width is None:
+        width = char_array_width
+    else:
+        assert width >= char_array_width
+
+    vert_pad = height - char_array_height
+    horiz_pad = width - char_array_width
+    top_pad = vert_pad // 2
+    bottom_pad = vert_pad - top_pad
+    left_pad = horiz_pad // 2
+    right_pad = horiz_pad - left_pad
+    return np.pad(char_array, ((top_pad, bottom_pad), (left_pad, right_pad)), "constant", constant_values=" ")
+    
+
 def matrix(char_arrays:list, horizontal_gap=1, vertical_gap=0):
-    """Creates a character array for a matrix. char_arrays should be a 2D list of character_arrays. There is also a padding of 1 row/column around the outside."""
+    """Creates a character array for a matrix. char_arrays should be a 2D list of character arrays. There is also a padding of 1 row/column around the outside."""
     # Find the maximum character array shape of each of the items
     char_array_width = 0
     char_array_height = 0
@@ -141,17 +168,9 @@ def matrix(char_arrays:list, horizontal_gap=1, vertical_gap=0):
     # Now go through items in char_arrays and add them to the matrix
     for i in range(len(char_arrays)):
         for j in range(len(char_arrays[i])):
-            # We need to pad each character array so that it has the shape
-            # (char_array_height, char_array_width)
             item = char_arrays[i][j]
             item_height, item_width = item.shape
-            vert_pad = char_array_height - item_height
-            horiz_pad = char_array_width - item_width
-            top_pad = vert_pad // 2
-            bottom_pad = vert_pad - top_pad
-            left_pad = horiz_pad // 2
-            right_pad = horiz_pad - left_pad
-            item = np.pad(item, ((top_pad, bottom_pad), (left_pad, right_pad)), "constant", constant_values=" ")
+            item = _center(item, char_array_height, char_array_width)
             # Add item to matrix:
             x_pos = 2 + char_array_width * j + horizontal_gap * (j + 1)
             y_pos = 2 + char_array_height * i + vertical_gap * (i + 1)
@@ -159,6 +178,99 @@ def matrix(char_arrays:list, horizontal_gap=1, vertical_gap=0):
 
 
     return matrix
+
+
+def _concat_align_vertical(a, b, gap=0):
+    """Places two char arrays horizontally next to each other (a to the left of b), vertically centered"""
+    if type(a) != np.ndarray:
+        a = str_to_char_array(str(a))
+    if type(b) != np.ndarray:
+        b = str_to_char_array(str(b))
+
+    a_height, a_width = a.shape
+    b_height, b_width = b.shape
+    a_top_pad = a_bottom_pad = b_top_pad = b_bottom_pad = 0
+
+    if a_height > b_height:
+        delta_height = a_height - b_height
+        b_top_pad = delta_height // 2
+    elif a_height < b_height:
+        delta_height = b_height - a_height
+        a_top_pad = delta_height // 2
+
+    # Construct array of spaces, then insert a and b in correct positions
+    concatenated = np.full([max(a_height, b_height), a_width + gap + b_width], " ")
+    concatenated[a_top_pad:a_top_pad+a_height, 0:a_width] = a
+    concatenated[b_top_pad:b_top_pad+b_height, a_width+gap:a_width+gap+b_width] = b
+    return concatenated
+
+
+def concat(*items, spacing=0):
+    return reduce(partial(_concat_align_vertical, gap=spacing), items)
+
+
+def product(*items:list):
+    return concat(*items, spacing=0)
+
+
+def add(a, b):
+    return concat(a, "+", b, spacing=1)
+    
+
+def frac(a, b, line_char="-", line_extra=2):
+    """Fraction (a over b). line_extra is how much the line extends past the numerator and denominator (on each side)"""
+    if type(a) != np.ndarray:
+        a = str_to_char_array(str(a))
+    if type(b) != np.ndarray:
+        b = str_to_char_array(str(b))
+
+    a_height, a_width = a.shape
+    b_height, b_width = b.shape
+
+    max_width = max(a_width, b_width)
+    a = _center(a, width=max_width+2*line_extra)
+    b = _center(b, width=max_width+2*line_extra)
+
+    char_array = np.full([a_height+1+b_height, max_width+2*line_extra], " ")
+    char_array[:a_height] = a
+    char_array[a_height] = line_char  # Draw line
+    char_array[a_height+1:] = b
+    return char_array
+
+
+def _left_parenthesis(height):
+    assert height > 0
+    if height == 1:
+        return str_to_char_array("(")
+    else:
+        string = " /"
+        for i in range(height - 2):
+            string += "\n|"
+        string += "\n \\"
+        return str_to_char_array(string)
+
+
+def _right_parenthesis(height):
+    assert height > 0
+    if height == 1:
+        return str_to_char_array(")")
+    else:
+        string = "\\"
+        for i in range(height - 2):
+            string += "\n |"
+        string += "\n/"
+        return str_to_char_array(string)
+
+
+def parentheses(a):
+    """Puts parentheses around a"""
+    if type(a) != np.ndarray:
+        a = str_to_char_array(str(a))
+
+    height, width = a.shape
+    left = _left_parenthesis(height)
+    right = _right_parenthesis(height)
+    return concat(left, a, right)
 
 
 def diagram(lines, circles, labels, fontsize=12, ttf_font_path="/usr/share/fonts/droid/DroidSansMono.ttf"):

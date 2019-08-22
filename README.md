@@ -34,6 +34,15 @@ display(fig1.draw())
 
 ![Geometry diagram](https://i.postimg.cc/Hsx15GHY/geometry.png)
 
+```python
+from mathscii import *
+
+display(frac(1, add(1, parentheses(frac(1, add(1, parentheses(frac(1, add(1, dots(3, 1))))))))))
+```
+
+![Continued fraction](https://i.imgur.com/WCnK9XU.png)
+
+
 ## Requirements
 
 - numpy
