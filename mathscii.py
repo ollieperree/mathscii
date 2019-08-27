@@ -137,7 +137,7 @@ def _center(char_array, height=None, width=None):
     left_pad = horiz_pad // 2
     right_pad = horiz_pad - left_pad
     return np.pad(char_array, ((top_pad, bottom_pad), (left_pad, right_pad)), "constant", constant_values=" ")
-    
+
 
 def matrix(char_arrays:list, horizontal_gap=1, vertical_gap=0):
     """Creates a character array for a matrix. char_arrays should be a 2D list of character arrays. There is also a padding of 1 row/column around the outside."""
@@ -215,7 +215,7 @@ def product(*items:list):
 
 def add(a, b):
     return concat(a, "+", b, spacing=1)
-    
+
 
 def frac(a, b, line_char="-", line_extra=2):
     """Fraction (a over b). line_extra is how much the line extends past the numerator and denominator (on each side)"""
@@ -235,6 +235,21 @@ def frac(a, b, line_char="-", line_extra=2):
     char_array[:a_height] = a
     char_array[a_height] = line_char  # Draw line
     char_array[a_height+1:] = b
+    return char_array
+
+
+def exp(a, b):
+    """Places b above and to the right of a, which might look a bit like exponentiation"""
+    if type(a) != np.ndarray:
+        a = str_to_char_array(str(a))
+    if type(b) != np.ndarray:
+        b = str_to_char_array(str(b))
+
+    a_height, a_width = a.shape
+    b_height, b_width = b.shape
+    char_array = np.full([a_height+b_height, a_width+b_width], " ")
+    char_array[b_height:,:a_width] = a
+    char_array[:b_height,a_width:] = b
     return char_array
 
 
